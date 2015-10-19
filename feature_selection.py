@@ -1,28 +1,21 @@
 __author__ = 'anthony bell'
 
-from sklearn.ensemble import RandomForestClassifer, RandomForestRegression
-
-""" Feature selection:
-    options: Forward/Backwards Selection
-             PCA
-             feature importances
-             random subset
-"""
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 class FeatureSelection():
-    def __init__(self, lower_is_better = True, method=None, X=None, y=None):
+    def __init__(self, lower_is_better = True, method=None, X=None, y=None, problem_type='classification'):
         self.lower_is_better = lower_is_better
         self.method = method
         self.X = X
         self.y = y
-        self.idxs = []
+        self.problem_type = problem_type
     
     def getTransformsList(self, method='all'):
-        return {'all': allSelection,
-                'forwards': forwardsSelection,
-                'backwards': backwardsSelection,
-                'importances': featureImportancesSelection,
-                'random': randomSubsetSelection
+        return {'all': self.allSelection,
+                'forwards': self.forwardsSelection,
+                'backwards': self.backwardsSelection,
+                'importances': self.featureImportancesSelection,
+                'random': self.randomSubsetSelection
                }
     
     def transform(self):
@@ -71,7 +64,7 @@ def forwards(X, y, score, lower_is_better=False, clf_names=None):
     clf_names = [str(n) for n in range(num_clfs)] if clf_names is None else clf_names
     
     all_idxs = list(range(num_clfs))
-    idxs = [] if idxs is None else idxs
+    idxs = []
     num_iters = num_clfs
     best_score = 0.0
     for iter_i in range(num_iters):
@@ -100,7 +93,7 @@ def forwards(X, y, score, lower_is_better=False, clf_names=None):
 def backwards(X, y, score, lower_is_better=False, clf_names=None):    
     num_clfs = X.shape[1]
     idxs = set(range(num_clfs))
-    num_iters = min(max_iters, num_clfs-1) #should have at least 1 left!
+    num_iters = min(num_clfs-1) #should have at least 1 left!
     best_score = 0.0
     for iter_i in range(num_iters):
         best_idx = -1

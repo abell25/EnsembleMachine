@@ -43,6 +43,25 @@ class TestCategoricalFeatureExtraction(TestCase):
         self.assertEqual(self.df2['age'][2], 2, '33 should map to 2!')
 
 
+    def test_removeUnsharedColumns(self):
+        cfe = CategoricalFeatureExtraction()
+        df1 = pd.DataFrame({'A': [1,2,3], 'B': [2,3,4], 'C': [3,4,5]})
+        df2 = pd.DataFrame({'A': [1,2,3], 'B': [2,3,4]})
+        df3 = pd.DataFrame({'A': [1,2,3], 'C': [2,3,4]})
+        df4 = pd.DataFrame({'A': [1,2,3], 'D': [2,3,4]})
+        cfe.removeUnsharedColumns([df1, df2, df3, df4])
+
+        self.assertEqual(len(df1.columns), 1, '{0} columns found for df1 instead of 1!'.format(len(df1.columns)))
+        self.assertEqual(len(df2.columns), 1, '{0} columns found for df2! instead of 1'.format(len(df2.columns)))
+        self.assertEqual(len(df3.columns), 1, '{0} columns found for df3! instead of 1'.format(len(df3.columns)))
+        self.assertEqual(len(df4.columns), 1, '{0} columns found for df4! instead of 1'.format(len(df4.columns)))
+
+        self.assertEqual(df1.columns[0], 'A', 'column for df1 didn\'t contain \'A\'!')
+        self.assertEqual(df2.columns[0], 'A', 'column for df2 didn\'t contain \'A\'!')
+        self.assertEqual(df3.columns[0], 'A', 'column for df3 didn\'t contain \'A\'!')
+        self.assertEqual(df4.columns[0], 'A', 'column for df4 didn\'t contain \'A\'!')
+
+
     def test_fillNAs(self):
         df = pd.DataFrame({'A': [11, 22, np.nan, 44]})
         cfe = CategoricalFeatureExtraction()

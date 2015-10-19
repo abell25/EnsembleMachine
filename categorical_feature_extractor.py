@@ -21,6 +21,18 @@ class CategoricalFeatureExtraction:
 
         CategoricalFeatureExtraction.convertColumnsToOrdinal(dfs, cols)
 
+    def getSharedColumns(self, dfs):
+        shared_columns = set(dfs[0].columns)
+        for df in dfs[1:]:
+            shared_columns = shared_columns.intersection(df.columns)
+        return shared_columns
+
+    def removeUnsharedColumns(self, dfs):
+        shared_columns = self.getSharedColumns(dfs)
+
+        for df in dfs:
+            cols_to_drop = list(set(df.columns) - set(shared_columns))
+            df.drop(cols_to_drop, axis=1, inplace=True)
 
     @staticmethod
     def fillNAs(df, cols):
