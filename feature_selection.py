@@ -3,11 +3,23 @@ __author__ = 'anthony bell'
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 class FeatureSelection():
-    def __init__(self, lower_is_better = True, method=None, X=None, y=None, problem_type='classification'):
+    def __init__(self, lower_is_better = True, method=None, X=None, y=None, clf=None, problem_type='classification'):
+        '''
+        class for feature selection of raw data.
+
+        :param lower_is_better: whether a
+        :param method:
+        :param X:
+        :param y:
+        :param clf:
+        :param problem_type:
+        :return:
+        '''
         self.lower_is_better = lower_is_better
         self.method = method
         self.X = X
         self.y = y
+        self.clf = clf
         self.problem_type = problem_type
     
     def getTransformsList(self, method='all'):
@@ -56,65 +68,68 @@ class FeatureSelection():
         """ pca selection
                 returns top N
         """
-    
-def forwards(X, y, score, lower_is_better=False, clf_names=None):    
-    num_clfs = X.shape[1]
-    print "num features:", num_clfs
-    
-    clf_names = [str(n) for n in range(num_clfs)] if clf_names is None else clf_names
-    
-    all_idxs = list(range(num_clfs))
-    idxs = []
-    num_iters = num_clfs
-    best_score = 0.0
-    for iter_i in range(num_iters):
-        best_idx = -1
-        
-        for i in all_idxs:
-            s = score(y, X[:,idxs + [i]].mean(axis=1))
-            delta = s - best_score
-            if lower_is_better: 
-                delta = -delta
-            if delta > 0:
-                best_score, best_idx = s, i
-               
-        if best_idx == -1:
-            print "no clf improved performance!  quitting.."
-            return idxs
-            
-        idxs += [best_idx]
-        print "iter %d/%d: clf: %d (%s), score: %.8f" % (iter_i, num_iters, best_idx, clf_names[best_idx], best_score)
-        best_idx = -1
-        
-    return idxs
+    @staticmethod
+    def forwards(X, y, score, lower_is_better=False, clf_names=None, reuse_cols=False):
+        num_clfs = X.shape[1]
+        print "num features:", num_clfs
 
-# Backwards
+        clf_names = [str(n) for n in range(num_clfs)] if clf_names is None else clf_names
 
-def backwards(X, y, score, lower_is_better=False, clf_names=None):    
-    num_clfs = X.shape[1]
-    idxs = set(range(num_clfs))
-    num_iters = min(num_clfs-1) #should have at least 1 left!
-    best_score = 0.0
-    for iter_i in range(num_iters):
-        best_idx = -1
-        
-        for i in idxs:
-            s = score(y, X[:,list(idxs - set([i]))].mean(axis=1))
-            delta = s - best_score
-            if lower_is_better: 
-                delta = -delta
-            if delta > 0:
-                best_score, best_idx = s, i
-               
-        if best_idx == -1:
-            print "no clf is worsening performance!  quitting.."
-            
-        idxs -= set([best_idx])
-        print "iter %d/%d: clf: %d (%s), score: %.8f" % (iter_i, num_iters, best_idx, clf_names[best_idx], best_score)
-        best_idx = -1
-        
-    return list(idxs)
+        all_idxs = list(range(num_clfs))
+        idxs = []
+        num_iters = num_clfs
+        best_score = 0.0
+        for iter_i in range(num_iters):
+            best_idx = -1
 
+            for i in all_idxs:
+                s = score(y, X[:,idxs + [i]].mean(axis=1))
+                delta = s - best_score
+                if lower_is_better:
+                    delta = -delta
+                if delta > 0:
+                    best_score, best_idx = s, i
 
-def clf_subset_predict(X, idxs):
-    return X[:,idxs].mean(axis=1)
+            if best_idx == -1:
+                print "no clf improved performance!  quitting.."
+                return idxs
+
+            if not reuse_cols:
+                all_idxs.remove(best_idx)
+
+            idxs += [best_idx]
+            print "iter %d/%d: clf: %d (%s), score: %.8f" % (iter_i, num_iters, best_idx, clf_names[best_idx], best_score)
+            best_idx = -1
+
+        return idxs
+
+    # Backwards
+    @staticmethod
+    def backwards(X, y, score_func, lower_is_better=False, clf_names=None):
+        num_clfs = X.shape[1]
+        idxs = set(range(num_clfs))
+        num_iters = min(num_clfs-1) #should have at least 1 left!
+        best_score = 0.0
+        for iter_i in range(num_iters):
+            best_idx = -1
+
+            for i in idxs:
+                s = score_func(y, X[:,list(idxs - set([i]))].mean(axis=1))
+                delta = s - best_score
+                if lower_is_better:
+                    delta = -delta
+                if delta > 0:
+                    best_score, best_idx = s, i
+
+            if best_idx == -1:
+                print "no clf is worsening performance!  quitting.."
+
+            idxs -= set([best_idx])
+            print "iter %d/%d: clf: %d (%s), score: %.8f" % (iter_i, num_iters, best_idx, clf_names[best_idx], best_score)
+            best_idx = -1
+
+        return list(idxs)
+
+    @staticmethod
+    def clf_subset_predict(X, idxs):
+        return X[:,idxs].mean(axis=1)
