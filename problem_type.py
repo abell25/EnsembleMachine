@@ -46,3 +46,4 @@ class ProblemType():
         w[ind] = 1./(y[ind]**2)
 
         return np.sqrt(np.mean( w * (y - y_pred)**2 ))
+

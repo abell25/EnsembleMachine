@@ -80,10 +80,17 @@ class TrainTestDataLoader():
 
             elif col_type == 'int' or col_type == 'float':
                 train_df[col] = train_df[col].fillna(numeric_imputed_value)
+                test_df[col] = test_df[col].fillna(numeric_imputed_value)
             else:
                 log.error('pandas type "{0}" is not known!'.format(col_type))
 
         categoricalFeatureExtractor.removeUnsharedColumns([train_df, test_df])
+
+    def getTrainTestData(self):
+        X = self.train_df.values.astype(float)
+        X_sub = self.test_df.values.astype(float)
+        y = self.train_labels
+        return X, X_sub, y
 
                 #raise Exception "I don't know what pandas type {0} is!".format(col_type)
     def saveCleanData(self, dataset_name='TEMP'):

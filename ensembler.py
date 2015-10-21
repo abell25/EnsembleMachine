@@ -5,6 +5,8 @@ from scipy.stats import mode
 from scipy.optimize import fmin
 from time import time
 
+from sklearn.linear_model import LogisticRegression, LinearRegression, LogisticRegressionCV
+from sklearn.cross_validation import train_test_split
 
 class Ensembler:
     '''
@@ -60,8 +62,8 @@ class Ensembler:
                         self.w[i] = 1.0 / self.w[i] # take inverse of scores if lower is better
                              
                 t_diff = (time() - t0)
-                print i, "time:", t_diff , "score:", scorer(y_test, y_preds[:,i]), "running score:", scorer(y_test, y_preds[:,:(i+1)].mean(axis=1))  
-                print "model:", str(clf)
+                print('{0} time: {1}, score: {2}, running score: {3}'.format( i, t_diff , scorer(y_test, y_preds[:,i]), scorer(y_test, y_preds[:,:(i+1)].mean(axis=1))))
+                print("model: {0}".format(str(clf)))
             
         self.clf_fit = [True for clf in self.clfs]
                              
@@ -77,14 +79,14 @@ class Ensembler:
             w = fmin(f, w_0)
             self.w = w
             self.w = self.w * ( (1/float(np.sum(self.w))) * float(len(self.clfs)) )
-            print "fmin_score:", scorer(y_test, (y_preds * self.w).mean(axis=1)), "normal:", scorer(y_test, y_preds.mean(axis=1))
+            print("fmin_score: {0}, normal: {1}".format(scorer(y_test, (y_preds * self.w).mean(axis=1)), scorer(y_test, y_preds.mean(axis=1))))
            
         if use_backwards:
-            print "use backwards ensemble selection"
+            print("use backwards ensemble selection")
             self.idxs = self.backwards(X_test, y_test, scorer)
     
         if use_forwards:
-            print "using forwards ensemble selection"
+            print("using forwards ensemble selection")
             self.idxs = self.forwards(X_test, y_test, scorer)
         
         if model_stacking_clf:
@@ -92,7 +94,7 @@ class Ensembler:
             y_preds_test  = self.predict(X_test, return_all_preds=True)
             self.model_stacking_clf.fit(y_preds_train, y_train)
             y_pred = self.model_stacking_clf.predict(y_preds_test)
-            print "model stacking ensemble score:", scorer(y_pred, y_test)
+            print("model stacking ensemble score: {0}".format(scorer(y_pred, y_test)))
             
     def get_f(self, y_preds, y, score):
         return lambda w: -score(y, np.mean((y_preds * w)*(1/np.sum(w)), axis=1))
@@ -156,7 +158,7 @@ class Ensembler:
         y_preds_train, y_preds_test, y_train, y_test = train_test_split(y_preds, y, train_size=0.8)
         clf.fit(y_preds_train, y_train)
         y_pred = clf.predict(y_preds_test)
-        print "ensemble (with classifier) score:", scorer(y_pred, y_test)
+        print("ensemble (with classifier) score: {0}".format(scorer(y_pred, y_test)))
         
         return clf.predict(y_preds)
        
@@ -166,7 +168,7 @@ class Ensembler:
         y_preds = self.predict(X, return_all_preds=True)
         
         num_clfs = y_preds.shape[1]
-        print "num clfs:", num_clfs
+        print("num clfs: {0}".format(num_clfs))
         
         all_idxs = list(range(num_clfs))
         idxs = []
@@ -186,11 +188,11 @@ class Ensembler:
                     best_score, best_idx = s, i
                    
             if best_idx == -1:
-                print "no clf improved performance!  quitting.."
+                print("no clf improved performance!  quitting..")
                 return idxs
                 
             idxs += [best_idx]
-            print "iter %d/%d: clf: %d, score: %.4f" % (iter_i, num_iters, best_idx, best_score)
+            print("iter {0}/{1}: clf: {2}, score: {3}".format(iter_i, num_iters, best_idx, best_score))
             best_idx = -1
             
         return idxs
@@ -218,10 +220,10 @@ class Ensembler:
                     best_score, best_idx = s, i
                    
             if best_idx == -1:
-                print "no clf is worsening performance!  quitting.."
+                print("no clf is worsening performance!  quitting..")
                 
             idxs -= set([best_idx])
-            print "iter %d/%d: clf: %d, score: %.4f" % (iter_i, num_iters, best_idx, best_score)
+            print("iter {0}/{1}: clf: {2}, score: {3}".format(iter_i, num_iters, best_idx, best_score))
             best_idx = -1
             
         return list(idxs)
