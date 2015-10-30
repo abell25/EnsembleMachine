@@ -8,8 +8,8 @@ class ProblemType():
     object for determining what kind of machine learning problem is being solved.
     """
     ProblemTypes = ['classification', 'regression', 'multiclass classification']
-    Metrics = ['F1', 'logloss', 'MSE', 'RMSE', 'AUC', 'RMSPE']
-    LowerIsBetter = [False, True, True, True, False, True]
+    Metrics = ['F1', 'logloss', 'MSE', 'RMSE', 'AUC', 'RMSPE', 'RMSLE']
+    LowerIsBetter = [False, True, True, True, False, True, True]
 
     def __init__(self, problem_type, metric):
         self.problem_type = problem_type
@@ -47,3 +47,6 @@ class ProblemType():
 
         return np.sqrt(np.mean( w * (y - y_pred)**2 ))
 
+    @staticmethod
+    def RMSLE(y, y_pred):
+        return ProblemType.RMSE(np.log(y + 1), np.log(y_pred + 1))

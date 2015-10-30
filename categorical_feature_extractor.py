@@ -1,5 +1,9 @@
 __author__ = 'anthony bell'
 
+import logging
+log = logging.getLogger(__name__)
+
+
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer

@@ -3,6 +3,10 @@ __author__ = 'anthony bell'
 import pandas as pd
 from dateutil import parser
 
+import logging
+log = logging.getLogger(__name__)
+
+
 class DateFeatureExtractor:
     def __init__(self):
         pass
@@ -75,21 +79,32 @@ class DateFeatureExtractor:
         if series.dtype != 'object':
             return False
 
-        vals = set()
-        for val in series:
-            vals.add(val)
-            if len(vals) > num_tries:
-                break
+        try:
+            vals = set()
+            for val in series:
+                vals.add(val)
+                if len(vals) > num_tries:
+                    break
 
-        for val in list(vals):
-            try:
-                if type(val) is int:
-                    continue
+            for val in list(vals):
+                try:
+                    if type(val) is not str:
+                        continue
 
-                parser.parse(val)
-                return True
-            except ValueError:
-                pass
+                    parser.parse(val)
+                    return True
+                except:
+                    pass
 
-        return False
+            return False
+        except:
+            log.info('trying to parse date for testIfColumnIsDate failed, returning false.')
+            return False
 
+    @staticmethod
+    def partialDateParser(date_str):
+        pass
+
+    @staticmethod
+    def partialDatetimeIntervalParser(date_str):
+        pass

@@ -1,5 +1,6 @@
 import numpy as np
 from feature_selection import FeatureSelection
+from problem_type import ProblemType
 from sklearn.ensemble import RandomForestRegressor
 from problem_type import ProblemType
 
@@ -11,12 +12,13 @@ __author__ = 'anthony bell'
 
 class TestFeatureSelection(TestCase):
   def setUp(self):
-    self.X = np.array([[1,2,3,4,5],[11,12,13,14,15],[21,22,23,24,25]])
-    self.y = np.array([1,11,21])
+    self.X = np.array([[i,i+1,i+2,i+3, i+4] for i in range(0, 100, 10)])
+    self.y = np.array([n*10 + 1 for n in range(10)])
     self.X_sub = np.array([[31,32,33,34,35],[41,42,43,44,45]])
     self.featureSelection = FeatureSelection(lower_is_better = True, method=None,
                                              X=self.X, y=self.y, X_sub=self.X_sub,
-                                             clf=RandomForestRegressor(n_estimators=2), score_func=ProblemType.RMSE,
+                                             clf=RandomForestRegressor(n_estimators=2),
+                                             score_func=ProblemType.logloss,
                                              problem_type='classification',
                                             col_names = ['A', 'B', 'C', 'D', 'E'])
 
@@ -26,13 +28,19 @@ class TestFeatureSelection(TestCase):
     self.assertEqual(X_sub.shape[1], 5, 'number of columns of X_sub is not 5!')
 
   def test_forwardsSelection(self):
-    self.fail()
+    X, X_sub = self.featureSelection.forwardsSelection()
+    self.assertTrue(X is not None)
+    self.assertTrue(X_sub is not None)
 
   def test_backwardsSelection(self):
-    self.fail()
+    X, X_sub = self.featureSelection.forwardsSelection()
+    self.assertTrue(X is not None)
+    self.assertTrue(X_sub is not None)
 
   def test_featureImportancesSelection(self):
-    self.fail()
+    X, X_sub = self.featureSelection.featureImportancesSelection(total_importance=0.95)
+    self.assertTrue(X is not None)
+    self.assertTrue(X_sub is not None)
 
   def test_randomSubsetSelection(self):
     X, X_sub = self.featureSelection.randomSubsetSelection(percent=0.4)

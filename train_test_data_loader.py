@@ -4,19 +4,23 @@ import pandas as pd
 from categorical_feature_extractor import CategoricalFeatureExtraction
 from date_feature_extractor import DateFeatureExtractor
 from dateutil import parser
+from time import time
 
 import logging
 log = logging.getLogger(__name__)
 
 class TrainTestDataLoader():
-    def __init__(self, train, test, train_labels=None, train_labels_column=None, test_ids=None, test_ids_column=None, sep=',', header='infer', try_date_parse=True):
+    def __init__(self, train, test, train_labels=None, train_labels_column=None, test_ids=None, test_ids_column=None, copy=True, sep=',', header='infer', try_date_parse=True):
         ''' Loads the raw data into the autoML pipeline using: imputation, date feature extraction, one-hot and ordinal
             encoding of factors.
 
-            train: train filename (assumed csv)
-            test: test filename   (assumed csv)
-            train_labels: training labels filename.  Either `train_labels` or `train_labels_column` must be used.
-            train_labels_column: column of train csv that contains the labels, if any.
+            train:               str: train filename, array-like: training data
+            test:                str: train filename, array-like: testing data
+            train_labels:        str: training labels filename, array-like: training labels as array
+            train_labels_column: training labels on train data as column specified
+            test_ids:            str: testids filename, array-like test ids as array
+            test_ids_column:     test ids on train data as column specified
+            copy:                Whether the data should be copied or modified in-place
         '''
         self.train = train
         self.test = test
@@ -25,17 +29,21 @@ class TrainTestDataLoader():
             log.info('reading train file {0}'.format(train))
             self.train_df = pd.read_csv(train, sep=sep, header=header)
         else:
-            self.train_df = train
+            self.train_df = train.copy() if copy else train
 
-        if type(train) is str:
+        if type(test) is str:
             log.info('reading test file {0}'.format(test))
             self.test_df = pd.read_csv(test, sep=sep, header=header)
         else:
-            self.test_df = test
+            self.test_df = test.copy() if copy else test
 
-        if train_labels:
-            log.info('loading train_labels from {0}'.format(train_labels))
-            self.train_labels = pd.read_csv(train_labels, sep=sep, header=header).values[:,0]
+        if train_labels is not None:
+            if type(train_labels) is str:
+                log.info('loading train_labels from {0}'.format(train_labels))
+                self.train_labels = pd.read_csv(train_labels, sep=sep, header=header).values[:,0]
+            else:
+                log.info('loading train_labels from array.')
+                self.train_labels = train_labels
         elif train_labels_column:
             log.info('extracting train labels from train_df[{0}]'.format(train_labels_column))
             self.train_labels = self.train_df[train_labels_column]
@@ -51,7 +59,8 @@ class TrainTestDataLoader():
         else:
             self.test_ids = None
 
-    def cleanData(self, max_onehot_limit=100, numeric_imputed_value=-99999999):
+    def cleanData(self, max_onehot_limit=100, max_ordinal_limit=10000, numeric_imputed_value=-99999999):
+        time_start = time()
         dateFeatureExtractor = DateFeatureExtractor()
         categoricalFeatureExtractor = CategoricalFeatureExtraction()
 
@@ -71,9 +80,13 @@ class TrainTestDataLoader():
                     dateFeatureExtractor.createFeaturesFromDateColumns(test_df, [col])
                 else:
                     num_categories = len(set(train_df[col].values).union(set(test_df[col].values)))
-                    if num_categories < max_onehot_limit:
+                    if num_categories < max_onehot_limit and num_categories > 2:
                         logging.info('loading {0} as one-hot (with {1} categories)'.format(col, num_categories))
                         categoricalFeatureExtractor.convertColumnsToOneHot([train_df, test_df], [col])
+                    elif num_categories > max_ordinal_limit:
+                        log.info('deleting ordinal column {0} with {1} categories'.format(col, num_categories))
+                        train_df.drop(col, axis=1, inplace=True)
+                        test_df.drop(col, axis=1, inplace=True)
                     else:
                         logging.info('loading {0} as an ordinal variable (with {1} categories)'.format(col, num_categories))
                         categoricalFeatureExtractor.convertColumnsToOrdinal([train_df, test_df], [col])
@@ -85,6 +98,7 @@ class TrainTestDataLoader():
                 log.error('pandas type "{0}" is not known!'.format(col_type))
 
         categoricalFeatureExtractor.removeUnsharedColumns([train_df, test_df])
+        log.info('Completed in {0} seconds!'.format(int(time() - time_start)))
 
     def getTrainTestData(self):
         X = self.train_df.values.astype(float)

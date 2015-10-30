@@ -54,10 +54,10 @@ class FeatureSelection():
                 add features 1-by-1 until score no longer improves
 
         """
-        X, X_sub = FeatureSelection.backwards(self.X, self.y, self.X_sub,
-                                   self.clf,
-                                   self.problem_type, lower_is_better=self.lower_is_better,
-                                   clf_names=self.train_df.columns)
+        X, X_sub = FeatureSelection.forwards(self.X, self.y, self.X_sub,
+                                   clf=self.clf,
+                                   score_func=self.score_func, lower_is_better=self.lower_is_better,
+                                   clf_names=self.col_names)
         return X, X_sub
     
     def backwardsSelection(self):
@@ -65,9 +65,9 @@ class FeatureSelection():
                 remove features 1-by-1 until score no longer improves
         """
         X, X_sub = FeatureSelection.backwards(self.X, self.y, self.X_sub,
-                                   self.clf,
-                                   ProblemType.RMSPE, lower_is_better=self.lower_is_better,
-                                   clf_names=self.train_df.columns)
+                                   clf=self.clf,
+                                   score_func=ProblemType.RMSPE, lower_is_better=self.lower_is_better,
+                                   clf_names=self.col_names)
         return X, X_sub
     
     def featureImportancesSelection(self, total_importance=0.95):
@@ -75,7 +75,7 @@ class FeatureSelection():
                   uses rf/xgb feature importances to filter useless features
         """
         X, X_sub = FeatureSelection.getFeatureImportanceColumns(self.X, self.y, self.X_sub,
-                                                    self.clf, col_names=self.train_df.columns,
+                                                    rf=self.clf, col_names=self.col_names,
                                                     total_importance=total_importance)
         return X, X_sub
     
@@ -93,7 +93,7 @@ class FeatureSelection():
     
 
     @staticmethod
-    def forwards(X, y, X_sub, clf, score, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None):
+    def forwards(X, y, X_sub, clf, score_func, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None):
         num_clfs = X.shape[1]
         log.info("num features: {0}".format(num_clfs))
 
@@ -118,7 +118,7 @@ class FeatureSelection():
                 else:
                     y_pred = clf.predict(X_test)
 
-                s = score(y_pred, y_test)
+                s = score_func(y_pred, y_test)
                 delta = s - best_score
 
                 log.debug('score: {0}, best_score: {1}, delta: {2}, index: {3}'.format(s, best_score, delta, i))
@@ -186,7 +186,7 @@ class FeatureSelection():
 
     @staticmethod
     def getFeatureImportanceColumns(X, y, X_sub, rf, col_names=None, total_importance=0.95):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.90)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.80)
         rf.fit(X_train, y_train)
         tuples = sorted(zip(range(len(rf.feature_importances_)), col_names, rf.feature_importances_), key=lambda x: x[2], reverse=True)
 
