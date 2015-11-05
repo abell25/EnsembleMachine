@@ -9,7 +9,9 @@ class TestModelLibrary(TestCase):
     pass
 
   def test_generateModel(self):
-    self.fail()
+    model_library = ModelLibrary('classification', 'small')
+    model = model_library.generateModel(model_selection_method='random', parameter_selection_method='random')
+
 
   def test_pickModel(self):
     model_library = ModelLibrary('classification', 'small')
