@@ -28,9 +28,6 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, SGDCl
 class ModelLibrary():
     """ The model libraries used by the model generator
     """
-    
-    task_types = ['regression', 'classifier']
-    model_scale = ['small', 'large']
 
     model_libraries = {
         'small regression': {
@@ -155,10 +152,13 @@ class ModelLibrary():
     }
 
     
-    def __init__(self, task_type, problem_size):
-        self.task_type = task_type
-        self.problem_size = problem_size
+    def __init__(self, is_classification = False, is_binary = False, is_large_scale = False):
+        problem_size = 'large' if is_large_scale else 'small'
+        task_type = 'classification' if is_classification else 'regression'
         self.model_library = self.model_libraries['{0} {1}'.format(problem_size, task_type)]
+
+    def getModelLibrary(self):
+        return self.model_library
 
     def generateModel(self, model_selection_method='random', parameter_selection_method='random'):
         model_name = self.pickModel(model_selection_method)

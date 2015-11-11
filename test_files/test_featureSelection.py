@@ -3,6 +3,8 @@ from feature_selection import FeatureSelection
 from problem_type import ProblemType
 from sklearn.ensemble import RandomForestRegressor
 from problem_type import ProblemType
+from train_test_data_loader import TrainTestDataLoader
+from sklearn.linear_model import LogisticRegressionCV
 
 from unittest import TestCase
 
@@ -46,3 +48,9 @@ class TestFeatureSelection(TestCase):
     X, X_sub = self.featureSelection.randomSubsetSelection(percent=0.4)
     self.assertEqual(X.shape[1], 2, 'number of columns of X is not 2!')
     self.assertEqual(X_sub.shape[1], 2, 'number of columns of X_sub is not 2!')
+
+  def test_featureExtractionFromActualDataset(self):
+    dataLoader = TrainTestDataLoader('../data/rossmann/train_100.csv', '../data/rossmann/test_100.csv', train_labels_column='Sales', test_ids_column='Id')
+    dataLoader.cleanData(max_onehot_limit=200)
+    X, X_sub, y = dataLoader.getTrainTestData()
+    featureSelection = FeatureSelection(lower_is_better=True, method='all', X=X, y=y, clf=LogisticRegressionCV(), problem_type='classification')

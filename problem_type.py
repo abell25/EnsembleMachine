@@ -1,6 +1,6 @@
 __author__ = 'anthony bell'
 
-from sklearn.metrics import f1_score, log_loss, mean_squared_error, roc_auc_score
+
 import numpy as np
 
 class ProblemType():
@@ -11,42 +11,20 @@ class ProblemType():
     Metrics = ['F1', 'logloss', 'MSE', 'RMSE', 'AUC', 'RMSPE', 'RMSLE']
     LowerIsBetter = [False, True, True, True, False, True, True]
 
-    def __init__(self, problem_type, metric):
-        self.problem_type = problem_type
+    def __init__(self, metric, is_classification, is_binary, is_multilabel, is_large_scale=False):
+        """
+        :param metric:              The Scoring metric.
+        :param is_classification:   Whether the problem is classification or not (regression).
+        :param is_binary:           Whether the output is binary or not (probabilities).
+        :param is_multilabel:       Whether the problem has multiple labels to predict.
+        :param is_large_scale:      For large scale problems, we'll need to use linear models instead.  (default: False)
+        """
+
+
+
         self.metric = metric
+        self.is_classification = is_classification
+        self.is_binary = is_binary
+        self.is_multilabel = is_multilabel
+        self.is_large_scale = is_large_scale
 
-
-    @staticmethod
-    def F1(y, y_pred):
-        return f1_score(y, y_pred)
-
-    @staticmethod
-    def logloss(y, y_pred):
-        return log_loss(y, y_pred)
-
-    @staticmethod
-    def MSE(y, y_pred):
-        return mean_squared_error(y, y_pred)
-
-    @staticmethod
-    def RMSE(y, y_pred):
-        return mean_squared_error(y, y_pred) ** 0.5
-
-    @staticmethod
-    def AUC(y, y_pred):
-        return roc_auc_score(y, y_pred)
-
-    @staticmethod
-    def RMSPE(y, y_pred):
-        '''
-        source from kaggle comp: https://www.kaggle.com/paso84/rossmann-store-sales/xgboost-in-python-with-rmspe/files
-        '''
-        w = np.zeros(y.shape, dtype=float)
-        ind = y != 0
-        w[ind] = 1./(y[ind]**2)
-
-        return np.sqrt(np.mean( w * (y - y_pred)**2 ))
-
-    @staticmethod
-    def RMSLE(y, y_pred):
-        return ProblemType.RMSE(np.log(y + 1), np.log(y_pred + 1))

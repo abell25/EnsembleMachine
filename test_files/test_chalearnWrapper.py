@@ -6,6 +6,7 @@ __author__ = 'anthony bell'
 
 
 class TestChalearnWrapper(TestCase):
+
   def setUp(self):
     self.dataset_loc = '../data/chalearn_autoML_challenge'
     self.adult_dataset_loc = path.join(self.dataset_loc, 'round0/adult')

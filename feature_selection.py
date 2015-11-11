@@ -33,7 +33,7 @@ class FeatureSelection():
         self.clf = clf
         self.score_func = score_func
         self.problem_type = problem_type
-        self.col_names = col_names if col_names else range(len(X.shape[1]))
+        self.col_names = col_names if col_names else range(X.shape[1])
     
     def getTransformsList(self, method='all'):
         return {'all': self.allSelection,

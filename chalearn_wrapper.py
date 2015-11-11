@@ -27,6 +27,11 @@ class ChalearnWrapper():
             files['test_data'] = self.loadNoHeaderDataframe(files['test_data']),
             files['validation_data'] = self.loadNoHeaderDataframe(files['validation_data']),
             files['train_labels'] = self.loadNoHeaderDataframe(files['train_labels'])
+            
+        files['train_data'] = files['train_data'][0] if type(files['train_data']) is tuple else files['train_data']
+        files['test_data'] = files['test_data'][0] if type(files['test_data']) is tuple else files['test_data']
+        files['validation_data'] = files['validation_data'][0] if type(files['validation_data']) is tuple else files['validation_data']
+        files['train_labels'] = files['train_labels'][0] if type(files['train_labels']) is tuple else files['train_labels']
 
         return files
 
