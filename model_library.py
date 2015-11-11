@@ -172,7 +172,7 @@ class ModelLibrary():
 
     def pickModel(self, model_selection_method):
         if model_selection_method is 'random':
-            model_name = random.choice(self.model_library.keys())
+            model_name = random.choice(list(self.model_library))
             return model_name
         else:
             raise Exception('selectionMethod "{0}" is not a valid model selection method!'.format(model_selection_method))

@@ -15,7 +15,7 @@ class TestModelLibrary(TestCase):
 
   def test_pickModel(self):
     model_library = ModelLibrary('classification', 'small')
-    available_model_names = model_library.model_libraries['small classification'].keys()
+    available_model_names = list(model_library.model_libraries['small classification'])
 
     model_name = model_library.pickModel(model_selection_method='random')
 
@@ -24,7 +24,7 @@ class TestModelLibrary(TestCase):
 
   def test_pickParameters(self):
     model_library = ModelLibrary('classification', 'small')
-    model_name = model_library.model_libraries['small classification'].keys()[0]
+    model_name = list(model_library.model_libraries['small classification'])[0]
     uninitialized_model = model_library.model_libraries['small classification'][model_name]
     ModelClass, parameter_ranges = uninitialized_model['model'], uninitialized_model['parameter_ranges']
 

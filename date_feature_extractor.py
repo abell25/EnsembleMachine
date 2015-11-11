@@ -63,7 +63,7 @@ class DateFeatureExtractor:
             #date column is still a string so we need to parse it!
             df[col] = pd.to_datetime(df[col], coerce=True, infer_datetime_format=True)
 
-        date_fields = zip(*df[col].apply(lambda x: (x.day, x.month, x.year, x.dayofweek, x.dayofyear) if x is not pd.NaT else -99).values)
+        date_fields = list(zip(*df[col].apply(lambda x: (x.day, x.month, x.year, x.dayofweek, x.dayofyear) if x is not pd.NaT else -99).values))
         date_cols = ['{0}_{1}'.format('Date', s) for s in ['day', 'month', 'year', 'dayofweek', 'dayofyear']]
 
         for k in range(len(date_cols)):

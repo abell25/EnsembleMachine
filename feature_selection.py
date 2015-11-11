@@ -188,7 +188,7 @@ class FeatureSelection():
     def getFeatureImportanceColumns(X, y, X_sub, rf, col_names=None, total_importance=0.95):
         X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.80)
         rf.fit(X_train, y_train)
-        tuples = sorted(zip(range(len(rf.feature_importances_)), col_names, rf.feature_importances_), key=lambda x: x[2], reverse=True)
+        tuples = sorted(list(zip(range(len(rf.feature_importances_)), col_names, rf.feature_importances_)), key=lambda x: x[2], reverse=True)
 
         sum_imp = 0.0
         trunc_tuples = []
