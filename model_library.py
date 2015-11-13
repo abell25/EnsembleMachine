@@ -171,11 +171,14 @@ class ModelLibrary():
 
 
     def pickModel(self, model_selection_method):
+        if model_selection_method in self.model_library:
+            return self.model_library[model_selection_method]
+
         if model_selection_method is 'random':
             model_name = random.choice(list(self.model_library))
             return model_name
-        else:
-            raise Exception('selectionMethod "{0}" is not a valid model selection method!'.format(model_selection_method))
+
+        raise Exception('selectionMethod "{0}" is not a valid model selection method!'.format(model_selection_method))
 
     def pickParameters(self, parameter_ranges, parameter_selection_method):
         chosen_parameter_values = {}
