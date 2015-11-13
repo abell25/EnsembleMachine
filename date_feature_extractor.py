@@ -64,7 +64,7 @@ class DateFeatureExtractor:
             df[col] = pd.to_datetime(df[col], coerce=True, infer_datetime_format=True)
 
         date_fields = list(zip(*df[col].apply(lambda x: (x.day, x.month, x.year, x.dayofweek, x.dayofyear) if x is not pd.NaT else -99).values))
-        date_cols = ['{0}_{1}'.format('Date', s) for s in ['day', 'month', 'year', 'dayofweek', 'dayofyear']]
+        date_cols = ['{0}_{1}'.format(col, s) for s in ['day', 'month', 'year', 'dayofweek', 'dayofyear']]
 
         for k in range(len(date_cols)):
             df[date_cols[k]] = date_fields[k]
@@ -89,6 +89,9 @@ class DateFeatureExtractor:
             for val in list(vals):
                 try:
                     if type(val) is not str:
+                        continue
+
+                    if val.isdigit():
                         continue
 
                     parser.parse(val)

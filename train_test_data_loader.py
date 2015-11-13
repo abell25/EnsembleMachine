@@ -25,6 +25,8 @@ class TrainTestDataLoader():
         self.train = train
         self.test = test
 
+        self.try_date_parse = try_date_parse
+
         if type(train) is str:
             log.info('reading train file {0}'.format(train))
             self.train_df = pd.read_csv(train, sep=sep, header=header)
@@ -74,7 +76,7 @@ class TrainTestDataLoader():
             if col not in shared_columns:
                 pass
             elif col_type == 'object':
-                if DateFeatureExtractor.testIfColumnIsDate(train_df[col], num_tries=5):
+                if self.try_date_parse and DateFeatureExtractor.testIfColumnIsDate(train_df[col], num_tries=5):
                     logging.info('loading {0} as a date'.format(col))
                     dateFeatureExtractor.createFeaturesFromDateColumns(train_df, [col])
                     dateFeatureExtractor.createFeaturesFromDateColumns(test_df, [col])

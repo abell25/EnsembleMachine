@@ -2,6 +2,8 @@ from unittest import TestCase
 from chalearn_wrapper import ChalearnWrapper
 from os import path
 
+from train_test_data_loader import TrainTestDataLoader
+
 __author__ = 'anthony bell'
 
 
@@ -30,3 +32,19 @@ class TestChalearnWrapper(TestCase):
     df = self.chalearnWrapper.loadNoHeaderDataframe(path.join(self.dataset_loc, 'round0/adult/adult_train.data'))
     self.assertEqual(df.values.shape[0], 34190)
     self.assertEqual(df.values.shape[1], 24)
+
+  def test_loadDataset(self):
+    chalearnWrapper = ChalearnWrapper(files_loc='../data/chalearn_autoML_challenge')
+    dataset = chalearnWrapper.getDataset('adult')
+    dataLoader = TrainTestDataLoader(train=dataset.train_df, test=dataset.test_df, train_labels=dataset.train_labels, try_date_parse=False)
+    dataLoader.cleanData(max_onehot_limit=200)
+    X, X_sub, y = dataLoader.getTrainTestData()
+
+  def test_loadAllDatasets(self):
+    chalearnWrapper = ChalearnWrapper(files_loc='../data/chalearn_autoML_challenge')
+    available_datasets = chalearnWrapper.getAvailableDatasets()
+    available_datasets = ['dorothea', 'christine', 'jasmine', 'madeline', 'philippine', 'sylvine', 'albert', 'dilbert', 'fabert', 'robert', 'volkert']
+
+    for dataset_name in available_datasets:
+        print("loading dataset {0}".format(dataset_name))
+        chalearnWrapper.get_train_test_dataset(dataset_name)

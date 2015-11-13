@@ -1,10 +1,16 @@
 __author__ = 'anthony bell'
 
 import numpy as np
-import scipy as sp
 from sklearn.metrics import f1_score, log_loss, mean_squared_error, roc_auc_score
 
-def ScoringFunctions():
+class ScoringFunctions():
+
+
+    def __init__(self):
+        self.scorer_mapping = {
+            'logloss': {'scorer': self.logloss, 'lower_is_better': True}
+        }
+
 
     @staticmethod
     def F1(y, y_pred):
@@ -41,17 +47,10 @@ def ScoringFunctions():
     def RMSLE(y, y_pred):
         return ScoringFunctions.RMSE(np.log(y + 1), np.log(y_pred + 1))
 
-    scorer_mapping = {
-        'auc_metric': AUC,
-        'bac_metric': F1,
-        'f1_metric': F1,
-        'pac_metric': F1,
-        'r2_metric': F1,
-    }
 
-    @staticmethod
-    def getScorer(scorer_name):
-        if not scorer_mapping.has_key(scorer_name):
+    def getScorer(self, scorer_name):
+        if scorer_name not in self.scorer_mapping:
             raise NameError('scorer {0} does not exist in the dictionary of available scorers!'.format(scorer_name))
         else:
-            return scorer_mapping[scorer_name]
+            return self.scorer_mapping[scorer_name]
+
