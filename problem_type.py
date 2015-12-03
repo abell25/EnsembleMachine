@@ -2,6 +2,7 @@ __author__ = 'anthony bell'
 
 
 import numpy as np
+from scoring.generic_scorer import GenericScorer
 
 class ProblemType():
     """
@@ -26,3 +27,5 @@ class ProblemType():
         self.is_large_scale = is_large_scale
         self.time_budget = time_budget
 
+        if self.scorer is None:
+            self.scorer = GenericScorer(metric=metric).getScorer()

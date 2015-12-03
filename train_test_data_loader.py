@@ -5,6 +5,9 @@ from categorical_feature_extractor import CategoricalFeatureExtraction
 from date_feature_extractor import DateFeatureExtractor
 from dateutil import parser
 from time import time
+from domain.ml_problem import MLproblem
+from domain.DataSet import DataSet
+from problem_type import ProblemType
 
 import logging
 log = logging.getLogger(__name__)
@@ -107,6 +110,19 @@ class TrainTestDataLoader():
         X_sub = self.test_df.values.astype(float)
         y = self.train_labels
         return X, X_sub, y
+
+    def getMLproblem(self, metric, scorer, is_classification, is_binary, is_multilabel=False, is_large_scale=False, time_budget=None):
+        problemType = ProblemType(metric=metric,
+                                  scorer=scorer,
+                                  is_classification=is_classification,
+                                  is_binary=is_binary,
+                                  is_multilabel=is_multilabel,
+                                  is_large_scale=is_large_scale,
+                                  time_budget=time_budget
+                                  )
+        X, X_sub, y = self.getTrainTestData()
+        dataset = DataSet(X=X, X_sub=X_sub, y=y)
+        return MLproblem(dataset=dataset, problemType=problemType)
 
                 #raise Exception "I don't know what pandas type {0} is!".format(col_type)
     def saveCleanData(self, dataset_name='TEMP'):

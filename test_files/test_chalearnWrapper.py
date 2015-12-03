@@ -22,8 +22,8 @@ class TestChalearnWrapper(TestCase):
     self.assertTrue('adult' in available_datasets)
 
   def test_getDataset(self):
-    dataset = self.chalearnWrapper.getDataset('adult')
-    self.assertTrue(dataset.has_key('train_data'))
+    mlProblem = self.chalearnWrapper.getMLproblem('adult')
+    self.assertTrue(mlProblem.has_key('train_data'))
 
   def test_loadDatasetPropertiesDict(self):
     self.chalearnWrapper.loadDatasetPropertiesDict(path.join(self.dataset_loc, 'round0/adult/adult_public.info'))
@@ -35,8 +35,8 @@ class TestChalearnWrapper(TestCase):
 
   def test_loadDataset(self):
     chalearnWrapper = ChalearnWrapper(files_loc='../data/chalearn_autoML_challenge')
-    dataset = chalearnWrapper.getDataset('adult')
-    dataLoader = TrainTestDataLoader(train=dataset.train_df, test=dataset.test_df, train_labels=dataset.train_labels, try_date_parse=False)
+    mlProblem = chalearnWrapper.getMLproblem('adult')
+    dataLoader = TrainTestDataLoader(train=mlProblem.train_df, test=mlProblem.test_df, train_labels=mlProblem.train_labels, try_date_parse=False)
     dataLoader.cleanData(max_onehot_limit=200)
     X, X_sub, y = dataLoader.getTrainTestData()
 

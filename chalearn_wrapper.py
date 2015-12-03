@@ -8,9 +8,10 @@ import numpy as np
 
 from train_test_data_loader import TrainTestDataLoader
 from scoring.chalearn_scorer import ChalearnScorer
-from domain.dataset import Dataset
+from domain.ml_problem import MLproblem
 from problem_type import ProblemType
 from util.sparse_functions import SparseFunctions
+from domain.DataSet import DataSet
 
 import logging
 log = logging.getLogger(__name__)
@@ -21,9 +22,9 @@ class ChalearnWrapper():
 
 
     def get_train_test_dataset(self, dataset_name, dataset_loc = None, max_onehot_limit=2):
-        dataset = self.getDataset(dataset_name, dataset_loc)
-        test_validation_df = pd.concat([dataset.test_df, dataset.validation_df])
-        dataLoader = TrainTestDataLoader(train=dataset.train_df, test=test_validation_df, train_labels=dataset.train_labels, try_date_parse=False)
+        mlProblem = self.getMLproblem(dataset_name, dataset_loc)
+        test_validation_df = pd.concat([mlProblem.test_df, mlProblem.validation_df])
+        dataLoader = TrainTestDataLoader(train=mlProblem.train_df, test=test_validation_df, train_labels=mlProblem.train_labels, try_date_parse=False)
         dataLoader.cleanData(max_onehot_limit=max_onehot_limit)
         X, X_sub, Y = dataLoader.getTrainTestData()
         return X, X_sub, Y
@@ -71,18 +72,18 @@ class ChalearnWrapper():
         paths = glob(path_glob)
         return [x.split('/')[-1] for x in sorted(paths)]
 
-    def getDataset(self, dataset_name, dataset_loc = None):
+    def getMLproblem(self, dataset_name, dataset_loc = None):
         files_loc = self.files_loc if dataset_loc == None else dataset_loc
         dataset_location = glob('{0}/*/{1}'.format(files_loc, dataset_name))[0]
         dataset_files = self.getDatasetFiles(dataset_location, dataset_name)
 
         problem_type = self.loadProblemTypeFromPropertiesDict(dataset_files['dataset_properties'])
+        dataset = DataSet(train_df=dataset_files['train_data'],
+                         test_df=dataset_files['test_data'],
+                         train_labels=dataset_files['train_labels'],
+                         validation_df=dataset_files['validation_data'])
 
-        return Dataset(train_df=dataset_files['train_data'],
-                       test_df=dataset_files['test_data'],
-                       train_labels=dataset_files['train_labels'],
-                       problem_type=problem_type,
-                       validation_df=dataset_files['validation_data'])
+        return MLproblem(problem_type=problem_type, dataset=dataset)
 
     def loadDatasetPropertiesDict(self, dataset_properties_file):
         file_data = open(dataset_properties_file).read()

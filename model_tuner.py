@@ -20,3 +20,4 @@ class ModelTuner():
 
         if tuning_method == 'random_configuration':
             model.fit(self.X, self.y)
+            return model
