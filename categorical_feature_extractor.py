@@ -12,6 +12,20 @@ class CategoricalFeatureExtraction:
     def __init__(self):
         pass
 
+    @staticmethod
+    def convertColumns(dfs, cols, one_hot_threshold=10):
+        if type(cols) is str:
+            cols = [cols]
+
+        for col in cols:
+            values = set([s for df in dfs for s in df[col].values])
+
+            if len(values) > one_hot_threshold:
+                CategoricalFeatureExtraction.convertColumnsToOrdinal(dfs, [col])
+            else:
+                CategoricalFeatureExtraction.convertColumnsToOneHot(dfs, [col])
+
+
     def convertColumnsToOneHot(self, dfs, cols):
         if type(cols) is str:
             cols = [cols]
@@ -39,12 +53,12 @@ class CategoricalFeatureExtraction:
             df.drop(cols_to_drop, axis=1, inplace=True)
 
     @staticmethod
-    def fillNAs(df, cols):
+    def fillNAs(df, cols, numeric_na_value=-99999999, str_na_value='NA'):
         for col in cols:
-            if df[col].dtypes in ['int', 'float']:
-                df[col] = df[col].fillna(-99999999)
+            if df[col].dtype in ['int', 'float']:
+                df[col] = df[col].fillna(numeric_na_value)
             else:
-                df[col] = df[col].fillna('NA')
+                df[col] = df[col].fillna(str_na_value)
 
 
     @staticmethod

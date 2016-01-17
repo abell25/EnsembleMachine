@@ -9,9 +9,20 @@ __author__ = 'anthony bell'
 class TestCategoricalFeatureExtraction(TestCase):
     @classmethod
     def setUp(self):
-        self.df1 = pd.DataFrame({'animal': ['cat', 'dog', 'horse','dog'], 'age': [11, 22, 11, 11]})
-        self.df2 = pd.DataFrame({'animal': ['horse', 'monkey', 'cow'], 'age': [11, 33, 33]})
+        self.df1 = pd.DataFrame({'animal': ['cat', 'dog', 'horse','dog'], 'age': [11, 22, 11, 11], 'type': ['house','house','farm','house']})
+        self.df2 = pd.DataFrame({'animal': ['horse', 'monkey', 'cow'], 'age': [11, 33, 33], 'type': ['farm', 'wild', 'farm']})
         self.animal_onehot_columns = ['animal=cat', 'animal=cow', 'animal=dog', 'animal=horse', 'animal=monkey']
+        self.type_onehot_columns = ['type=house', 'type=farm', 'type=wild']
+
+    def test_convertColumns_thresholdShouldDetermineIfColumnIsOneHotEncoded(self):
+        CategoricalFeatureExtraction.convertColumns([self.df1, self.df2], ['animal', 'type'], one_hot_threshold=3)
+
+        #animal should be ordinal, #type should be one-hot
+        for df in [self.df1, self.df2]:
+            for onehot_col in self.type_onehot_columns:
+                self.assertTrue(onehot_col in df.columns)
+            self.assertTrue('type' not in df.columns, 'type column should have been deleted')
+            self.assertTrue('animal' in df.columns)
 
     def test_convertColumnsToOneHot(self):
         cfe = CategoricalFeatureExtraction()
@@ -30,7 +41,7 @@ class TestCategoricalFeatureExtraction(TestCase):
         cfe.convertColumnsToOrdinal([self.df1, self.df2], ['age'])
 
         for df in [self.df1, self.df2]:
-            print df.columns.values
+            print(df.columns.values)
             self.assertTrue('animal' in df.columns, 'animal column should not have been deleted!')
             self.assertTrue('age' in df.columns, 'age column should not have been deleted!')
 
