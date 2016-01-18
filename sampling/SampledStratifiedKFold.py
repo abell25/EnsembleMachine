@@ -1,7 +1,11 @@
 __author__ = 'anthony'
 
 from sklearn.cross_validation import StratifiedKFold, StratifiedShuffleSplit, ShuffleSplit
+import math
 import uuid
+
+import logging
+logger = logging.getLogger(__name__)
 
 class SampledStratifiedKFold:
     def __init__(self, y, num_folds=5, train_size=None):

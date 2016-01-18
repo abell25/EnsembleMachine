@@ -1,8 +1,18 @@
 __author__ = 'anthony'
 
+import random
+from time import time
+import itertools
+import numpy as np
+from cross_validation.TrialsRecorder import TrialsRecorder
+
+import logging
+logger = logging.getLogger(__name__)
+
 class ParameterSweep:
-    def __init__(self, X, y):
+    def __init__(self, X, y, dataset_name):
         self.trials = []
+        self.trials_store = TrialsRecorder(dataset_name)
         self.X = X
         self.y = y
 
@@ -15,19 +25,18 @@ class ParameterSweep:
     @staticmethod
     def getRandomParams(params):
         arr = list(ParameterSweep.getParamsGenerator(params))
-        shuffle(arr)
+        random.shuffle(arr)
         return arr
 
     def run_configuration(self, Clf, params, scorer, splits, use_proba=False, save_y_oof=False):
-        rf = None
         scores = []
         t0 = time()
 
         clf = Clf(**params)
 
         if save_y_oof:
-            y_oof = np.zeros_like(self.y)
-            print("y_oof shape: {0}".format(y_oof.shape))
+            y_oof = np.zeros(len(self.y))
+            #print("y_oof shape: {0}".format(y_oof.shape))
 
         for i, (train_idx, test_idx) in enumerate(splits):
             t_i = time()
@@ -37,9 +46,9 @@ class ParameterSweep:
             y_pred = clf.predict_proba(X_test)[:,1] if use_proba else clf.predict(X_test)
 
             if save_y_oof:
-                print("test_idx: shape: {0}, act: {1}, y_pred: sum: {2}, act: {3}".format(test_idx.shape, test_idx, sum(y_pred), y_pred))
-                y_oof[test_idx] = y_pred
-                print("y_oof[test_idx] sum: {0}, shape: {1}, act: {2}".format(sum(y_oof[test_idx]), y_oof[test_idx].shape, y_oof[test_idx]))
+                #print("test_idx: shape: {0}, act: {1}, y_pred: sum: {2}, act: {3}".format(test_idx.shape, test_idx, sum(y_pred), y_pred))
+                y_oof[list(test_idx)] = y_pred
+                #print("y_oof[test_idx] sum: {0}, shape: {1}, act: {2}".format(sum(y_oof[test_idx]), y_oof[test_idx].shape, y_oof[test_idx]))
 
             scores.append(scorer(y_test, y_pred))
             logger.debug(" iter {0}: {1:2.2} sec \t score: {2:.4},  running: {3:.4}".format(i, time()-t_i, scores[-1], np.mean(scores)))
@@ -53,6 +62,7 @@ class ParameterSweep:
         logger.info(" time: {0:.2f} sec,  score: {1:.4f} +/- {2:.4f}, stats: {3}".format(time()-t0, np.mean(scores), np.std(scores), stats))
 
         self.trials.append(stats)
+        self.trials_store.saveTrial(stats)
         return stats
 
     def run_configuration_sweep(self, Clf, param_values, scorer, splits, search_plan, use_proba=False, save_y_oof=False, num_samples=10):
@@ -67,3 +77,9 @@ class ParameterSweep:
             stats.append(self.run_configuration(Clf, params, scorer, splits, use_proba, save_y_oof))
 
         return stats
+
+    def get_trials(self, query=None):
+        return [x for x in self.trials_store.getAllTrials(query)]
+
+    def clear_all_trials(self):
+        self.trials_store.clear_all_trials()
