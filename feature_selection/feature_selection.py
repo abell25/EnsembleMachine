@@ -93,32 +93,37 @@ class FeatureSelection():
     
 
     @staticmethod
-    def forwards(X, y, X_sub, clf, score_func, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None):
-        num_clfs = X.shape[1]
-        log.info("num features: {0}".format(num_clfs))
+    def forwards(X, y, X_sub, clf, score_func, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None, allow_repeats=False, idxs=None, return_idxs=False):
 
         clf_names = [str(n) for n in range(num_clfs)] if clf_names is None else clf_names
 
         all_idxs = list(range(num_clfs))
-        idxs = []
+        idxs = [] if idxs is None else idxs
         num_iters = num_clfs
         best_score = 99999999.0 if lower_is_better else -99999999.0
+        best_score_val = 0.0
         for iter_i in range(num_iters):
             best_idx = -1
 
             for i in all_idxs:
                 X_latest = X[:,idxs + [i]]
-                X_train, X_test, y_train, y_test = train_test_split(X_latest, y, train_size=0.20, test_size=0.20)
+                X_train, X_test_val, y_train, y_test_val = train_test_split(X_latest, y, train_size=0.4) #, test_size=0.20)
+                X_test, X_val, y_test, y_val = train_test_split(X_test_val, y_test_val, train_size=0.5)
+
                 clf.fit(X_train, y_train)
 
                 if use_proba:
                     y_pred = clf.predict_proba(X_test)
+                    y_pred_val = clf.predict_proba(X_val)
                     if problem_type == 'classification':
                         y_pred = y_pred[:,1] #only keep one column
+                        y_pred_val = y_pred_val[:,1]
                 else:
                     y_pred = clf.predict(X_test)
+                    y_pred_val = clf.predict(X_val)
 
-                s = score_func(y_pred, y_test)
+                s = score_func(y_test, y_pred)
+                s_val = score_func(y_val, y_pred_val)
                 delta = s - best_score
 
                 log.debug('score: {0}, best_score: {1}, delta: {2}, index: {3}'.format(s, best_score, delta, i))
@@ -127,24 +132,32 @@ class FeatureSelection():
                     delta = -delta
                 if delta > 0:
                     best_score, best_idx = s, i
+                    best_score_val = s_val
 
             if best_idx == -1:
                 log.info("no predictor improved performance!  quitting..")
-                return X[:,idxs], X_sub[:,idxs]
+                if return_idxs:
+                    return idxs
+                else:
+                    return X[:,idxs], X_sub[:,idxs]
 
-            all_idxs.remove(best_idx)
-            idxs += [best_idx]
+            if not allow_repeats:
+                all_idxs.remove(best_idx)
+            idxs.append(best_idx)
 
-            log.info("iter {0}/{1}: predictor: {2} ({3}), score: {4}".format(iter_i, num_iters, best_idx, clf_names[best_idx], best_score))
+            log.info("iter {0}/{1}: predictor: {2} ({3}), score: {4:.4f}, holdout: {5:.4f}".format(iter_i, num_iters, best_idx, clf_names[best_idx], best_score, best_score_val))
             best_idx = -1
 
-        return X[:,idxs], X_sub[:,idxs]
+        if return_idxs:
+            return idxs
+        else:
+            return X[:,idxs], X_sub[:,idxs]
 
     # Backwards
     @staticmethod
-    def backwards(X, y, X_sub, clf, score_func, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None):
+    def backwards(X, y, X_sub, clf, score_func, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None, idxs=None, return_idxs=False):
         num_clfs = X.shape[1]
-        idxs = set(range(num_clfs))
+        idxs = set(range(num_clfs)) if idxs is None else (set(range(num_clfs)) - set(idxs))
         num_iters = max(num_clfs-1, 0)
         log.info("num features: {0}, num iters: {1}".format(num_clfs, num_iters))
         best_score = 99999999.0 if lower_is_better else -99999999.0
@@ -182,7 +195,14 @@ class FeatureSelection():
             log.info("iter {0}/{1}: clf: {2} ({3}), score: {4}".format(iter_i, num_iters, best_idx, clf_names[best_idx], best_score))
             best_idx = -1
 
-        return X[:,list(idxs)], X_sub[:,list(idxs)]
+        if return_idxs:
+            return list(idxs)
+        else:
+            return X[:,list(idxs)], X_sub[:,list(idxs)]
+
+    @staticmethod
+    def getForwardsBackwards(X, y, X_sub, clf, score_func, use_proba=False, lower_is_better=False, problem_type=None, clf_names=None):
+        pass
 
     @staticmethod
     def getFeatureImportanceColumns(X, y, X_sub, rf, col_names=None, total_importance=0.95):

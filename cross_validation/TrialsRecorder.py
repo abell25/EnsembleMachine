@@ -16,6 +16,8 @@ class TrialsRecorder:
     def saveTrial(self, trial):
         if "y_oof" in trial:
             trial["y_oof"] = Binary(pickle.dumps(trial["y_oof"],  protocol=2), subtype=128)
+        if "y_val" in trial:
+            trial["y_val"] = Binary(pickle.dumps(trial["y_val"],  protocol=2), subtype=128)
 
         self.trials.insert_one(trial)
 
@@ -24,16 +26,22 @@ class TrialsRecorder:
         for trial in self.trials.find(query):
             if "y_oof" in trial:
                 trial["y_oof"] = pickle.loads(trial["y_oof"])
+            if "y_val" in trial:
+                trial["y_val"] = pickle.loads(trial["y_val"])
             yield trial
+
 
     def getAllTrialsWithScoreAtLeast(self, score):
         return self.getAllTrials({"score": {"$gte": score}})
 
+
     def getAllTrialsWithScoreAtMost(self, score):
         return self.getAllTrials({"score": {"$lte": score}})
 
+
     def clear_all_trials(self):
         self.client[self.db_name].drop_collection(self.dataset_name)
+
 
     @staticmethod
     def showTables(client=None):

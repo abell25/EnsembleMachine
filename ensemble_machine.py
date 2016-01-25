@@ -20,7 +20,7 @@ class EnsembleMachine():
         start_time = time()
 
         X, X_sub, y = self.dataset.getDataset()
-        X_train, X_test, y_train, y_test
+        #X_train, X_test, y_train, y_test =
 
         while (time() - start_time) < max_seconds:
             self.run_iteration()
