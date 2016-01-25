@@ -20,7 +20,15 @@ class TestGPFeatureSelection(TestCase):
                                      num_generations=2,
                                      prob_random_mutation=0.1)
 
+        self.fs10 = GPFeatureSelection(mean_squared_error, [lr],
+                                     init_population_size=25, final_population_size=5,
+                                     init_dataset_size=10, final_dataset_size=30,
+                                     percent_features_first_selected=0.25,
+                                     num_generations=10,
+                                     prob_random_mutation=0.1)
 
+    def test_fit2(self):
+        self.fs10.fit(self.X, self.y)
 
     def test_fit(self):
         self.fs.fit(self.X, self.y)
