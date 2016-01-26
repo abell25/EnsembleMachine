@@ -29,9 +29,12 @@ class GPIndividual:
 
     def random_mutation(self):
         k = random.choice(range(len(self.features)))
-        self.features[k] = (not self.features[k])*1
+        invert = np.vectorize(lambda x: (not x)*1)
+        self.features[k] = invert(self.features[k])
+
+        #self.features[k] = (not self.features[k])*1
 
     def reproduce(self, other):
-        new_features = [random.choice(x) for x in zip(self.features, other.features)]
+        new_features = np.array([random.choice(x) for x in zip(self.features, other.features)])
         return GPIndividual(self.clf, self.scorer, new_features, self.use_proba)
 

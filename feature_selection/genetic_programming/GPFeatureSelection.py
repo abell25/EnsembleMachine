@@ -132,6 +132,13 @@ class GPFeatureSelection:
         stats = self.get_averages_for_generation(population, num_features, top_k_used_features)
         best_individuals = self.get_best_stats_for_generation(population, num_features, top_k_individuals)
         stats["best_individuals"] = best_individuals
+
+        log.info("|-{0:.4f}--({1:.4f}/{2:.4f})--{3:.4f}-|  std: {4:.4f}".format(
+                stats["min"], stats["mean"], stats["median"], stats["max"], stats["std"]))
+        log.info("top features: {0}".format(stats["top features"]))
+        for ind in best_individuals:
+            log.info("     (ind) score: {0:.5f}, features ({1}): {2}".format(ind["score"], ind["num_features"], sorted(ind["features"])))
+
         return stats
 
     def get_averages_for_generation(self, population, num_features, top_k_used_features=10):
@@ -157,7 +164,7 @@ class GPFeatureSelection:
         stats = []
         for i, p in enumerate(sorted_population):
             features, score = p.features, p.fitness
-            selected_features = sorted(idxs[features])
+            selected_features = sorted(idxs[features == 1])
             num_selected_features = len(selected_features)
             stats.append({"score": score, "num_features": num_features, "features": selected_features})
 
