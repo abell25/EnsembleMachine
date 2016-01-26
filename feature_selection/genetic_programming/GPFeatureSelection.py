@@ -150,12 +150,17 @@ class GPFeatureSelection:
         score_mean = np.mean(scores)
         score_median = np.median(scores)
         score_std = np.std(scores)
-        features = [idxs[p.features] for p in population]
+        features = [idxs[p.features == 1] for p in population]
         features_idxs = [i for idxs in features for i in idxs]
-        feature_hist = np.histogram(features_idxs, bins=range(1, ))
-        hst = np.histogram(feature_hist, bins=range(0,num_features))
-        sorted_counts = sorted(list(zip(*hst)), key=lambda x: x[0], reverse=True)
-        return {"min": score_min, "max": score_max, "mean": score_mean, "median": score_median, "std": score_std, "top features": sorted_counts[:top_k_used_features]}
+        log.debug("features: {0}".format([p.features for p in population]))
+        log.debug("features_idxs: {0}, max: {1}".format(features_idxs, num_features))
+        feature_hist = np.histogram(features_idxs, bins=range(0, num_features))
+        log.debug("feature_hist: {0}, num_features: {1}".format(feature_hist, num_features))
+        sorted_counts = sorted(list(zip(*feature_hist)), key=lambda x: x[0], reverse=True)
+        log.debug("sorted counts: {0}".format(sorted_counts))
+        top_features = [x[1] for x in sorted_counts[:top_k_used_features]]
+        log.debug("top {0} features: {1}".format(top_k_used_features, top_features))
+        return {"min": score_min, "max": score_max, "mean": score_mean, "median": score_median, "std": score_std, "top features": top_features}
 
 
     def get_best_stats_for_generation(self, population, num_features, top_k=10):
@@ -164,9 +169,9 @@ class GPFeatureSelection:
         stats = []
         for i, p in enumerate(sorted_population):
             features, score = p.features, p.fitness
-            selected_features = sorted(idxs[features == 1])
+            selected_features = idxs[features == 1]
             num_selected_features = len(selected_features)
-            stats.append({"score": score, "num_features": num_features, "features": selected_features})
+            stats.append({"score": score, "num_features": num_selected_features, "features": selected_features})
 
         return stats
 
