@@ -75,7 +75,12 @@ class GPFeatureSelection:
             k, (time.time() - t0), population_size, dataset_size, np.mean(fitnesses), np.std(fitnesses), num_mutations
         ))
         stats = self.get_aggregated_data(population, X.shape[1], top_k_individuals=10, top_k_used_features=10)
+        self.diagnostics[k].update(stats)
         log.debug(stats)
+        print("data:{0:5} pop:{1} mean:{2:.5f} std:{3:.5f} max: {4:.5f} top features: {5}".format(
+            dataset_size, population_size, stats['mean'], stats['std'], stats['max'], stats['top features']))
+        print(" ".join(["({0:.5f}, {1}, {2})".format(x['score'], x['num_features'], x['features'])
+          for x in self.diagnostics[k]['best_individuals'][:5]]))
 
         return new_population
 
@@ -95,13 +100,6 @@ class GPFeatureSelection:
         return num_mutations
 
     def get_init_population(self, num_features):
-
-        #all_features = [(np.random.rand(num_features) < self.percent_features_first_selected)*1 for _ in range(self.init_population_size)]
-
-        #all_selected_features_idxs = [set(SamplingFunctions.sample_array(self.init_population_size, self.percent_features_first_selected))
-        #                              for _ in range(self.init_population_size)]
-        #all_features = [[(i in idxs)*1 for i in range(len(num_features))] for idxs in all_selected_features_idxs]
-
         feature_idxs = np.array(range(num_features))
         population = []
         for k in range(self.init_population_size):
@@ -111,7 +109,6 @@ class GPFeatureSelection:
             individual = GPIndividual(random.choice(self.clfs), self.scorer, features, self.use_proba)
             population.append(individual)
 
-        #population = [GPIndividual(random.choice(self.clfs), self.scorer, features, self.use_proba) for features in all_features]
         return population
 
     def calc_population_fitnesses_parallel(self, population, X, y, train_size):
@@ -133,11 +130,11 @@ class GPFeatureSelection:
         best_individuals = self.get_best_stats_for_generation(population, num_features, top_k_individuals)
         stats["best_individuals"] = best_individuals
 
-        log.info("|-{0:.4f}--({1:.4f}/{2:.4f})--{3:.4f}-|  std: {4:.4f}".format(
+        log.debug("|-{0:.4f}--({1:.4f}/{2:.4f})--{3:.4f}-|  std: {4:.4f}".format(
                 stats["min"], stats["mean"], stats["median"], stats["max"], stats["std"]))
-        log.info("top features: {0}".format(stats["top features"]))
+        log.debug("top features: {0}".format(stats["top features"]))
         for ind in best_individuals:
-            log.info("     (ind) score: {0:.5f}, features ({1}): {2}".format(ind["score"], ind["num_features"], sorted(ind["features"])))
+            log.debug("     (ind) score: {0:.5f}, features ({1}): {2}".format(ind["score"], ind["num_features"], sorted(ind["features"])))
 
         return stats
 
